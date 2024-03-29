@@ -1,15 +1,19 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SoundEffect : MonoBehaviour
 {
-    public AudioSource src;
-    public AudioClip sfx1;
     // Start is called before the first frame update
-    public void button1()
+    public void Button1()
     {
-        src.clip = sfx1;
-        src.Play();
+        // Check if the AudioManager instance exists
+        if (AudioManager.Instance != null)
+        {
+            // Play the button click sound effect
+            AudioManager.Instance.PlaySFX("buttonclick");
+        }
+        else
+        {
+            Debug.LogWarning("AudioManager instance not found.");
+        }
     }
 }
