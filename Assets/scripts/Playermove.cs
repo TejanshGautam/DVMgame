@@ -1,70 +1,86 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class MovePlayer : MonoBehaviour
+public class PlayerMove : MonoBehaviour
 {
     public MovementJoystick movementJoystick;
     public float playerSpeed;
-    public float dashSpeed=10f;
+    public float dashSpeed = 10f;
     private Rigidbody2D rb;
     private Animator anim;
     private SpriteRenderer sprite;
-    private bool isDashing=false;
-    public float dashTimer=0.125f;
-    private float dashStartTime=0f;
+    private bool isDashing = false;
+    private float dashDuration = 0.125f;
+    private float dashTimer = 0f;
     public TrailRenderer trailRenderer;
 
-    // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>(); // Move Animator initialization here
-        sprite = GetComponent<SpriteRenderer>(); // Move SpriteRenderer initialization here
+        anim = GetComponent<Animator>();
+        sprite = GetComponent<SpriteRenderer>();
         trailRenderer.enabled = false;
+
+        // Find the button component in the scene
+        Button dashButton = GameObject.Find("DashButton").GetComponent<Button>();
+
+        // Add a listener to the button to call the Dash method when clicked
+        dashButton.onClick.AddListener(Dash);
     }
 
-    // Update is called once per frame
     void Update()
     {
-        Vector2 direction = movementJoystick.joystickVec;
-        MoveCharacter(direction); // Call MoveCharacter() with joystick direction
-        if(Input.GetKeyDown(KeyCode.Q)){
-            isDashing=true;
-        }
-        if(isDashing && dashStartTime<=dashTimer){
-            rb.velocity = direction * dashSpeed;
-            dashStartTime+=Time.deltaTime;
-            trailRenderer.enabled = true;
-        }
-        else{
-            dashStartTime=0f;
-            isDashing=false;
-            rb.velocity = direction * playerSpeed;
-            trailRenderer.enabled = false;
+        Vector2 direction = movementJoystick.joystickVec; // Get the direction from the joystick
+        MoveCharacter(direction); // Move the character based on the joystick input
+
+        if (isDashing)
+        {
+            if (dashTimer < dashDuration)
+            {
+                rb.velocity = direction * dashSpeed;
+                dashTimer += Time.deltaTime;
+            }
+            else
+            {
+                isDashing = false;
+                rb.velocity = direction * playerSpeed;
+                dashTimer = 0f;
+                trailRenderer.enabled = false;
+            }
         }
     }
 
     public void MoveCharacter(Vector2 direction)
     {
-        // Set animation parameters based on the movement direction
-        if (direction.x != 0)
+        if (!isDashing)
         {
-            anim.SetBool("Running", true);
-            Vector3 newScale = this.transform.localScale;
-            if(direction.x>0)
-                newScale.x = 0.8f;
+            // Set animation parameters based on the movement direction
+            if (direction.x != 0)
+            {
+                anim.SetBool("Running", true);
+                Vector3 newScale = this.transform.localScale;
+                newScale.x = direction.x > 0 ? 0.8f : -0.8f;
+                this.transform.localScale = newScale;
+            }
+            else if (direction.y != 0)
+            {
+                anim.SetBool("Running", true);
+            }
             else
-                newScale.x = -0.8f;
-            this.transform.localScale = newScale;
+            {
+                anim.SetBool("Running", false);
+            }
+
+            // Move the player based on joystick input
+            rb.velocity = direction * playerSpeed;
         }
-        else if (direction.y != 0)
-        {
-            anim.SetBool("Running", true);
-        }
-        else
-        {
-            anim.SetBool("Running", false);
-        }
+    }
+
+    public void Dash()
+    {
+        isDashing = true;
+        trailRenderer.enabled = true;
     }
 }

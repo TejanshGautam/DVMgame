@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Block : MonoBehaviour
 {
@@ -11,30 +12,32 @@ public class Block : MonoBehaviour
     public bool isBlocking = false;
     private bool isCooldown = false;
 
-    void Update()
+    void Start()
     {
-        if (!isCooldown && Input.GetKeyDown(KeyCode.E))
+        // Find the button component in the scene
+        Button blockButton = GameObject.Find("BlockButton").GetComponent<Button>();
+
+        // Add a listener to the button to call the StartBlocking method when clicked
+        blockButton.onClick.AddListener(StartBlocking);
+    }
+
+    public void StartBlocking()
+    {
+        if (!isCooldown && !isBlocking)
         {
             animator.SetTrigger("Block");
             StartCoroutine(BlockCoroutine());
-
         }
     }
 
     IEnumerator BlockCoroutine()
     {
-        if (!isBlocking)
-        {
-            isBlocking = true;
-            playerCollider.enabled = false;
-
-            yield return new WaitForSeconds(blockDuration);
-
-            playerCollider.enabled = true;
-            isBlocking = false;
-
-            StartCoroutine(BlockCooldownCoroutine());
-        }
+        isBlocking = true;
+        playerCollider.enabled = false;
+        yield return new WaitForSeconds(blockDuration);
+        playerCollider.enabled = true;
+        isBlocking = false;
+        StartCoroutine(BlockCooldownCoroutine());
     }
 
     IEnumerator BlockCooldownCoroutine()
