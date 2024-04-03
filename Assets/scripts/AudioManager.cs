@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using System;
 
 public class AudioManager : MonoBehaviour
@@ -8,6 +9,9 @@ public class AudioManager : MonoBehaviour
 
     public Sound[] musicSounds, sfxSounds;
     public AudioSource musicSource, sfxSource;
+
+    public Slider musicVolumeSlider; // Reference to the music volume slider in the scene
+    public Slider sfxVolumeSlider; // Reference to the SFX volume slider in the scene
 
     private float musicVolume = 1f;
     private float sfxVolume = 1f;
@@ -34,15 +38,21 @@ public class AudioManager : MonoBehaviour
         if (PlayerPrefs.HasKey(MusicVolumeKey))
         {
             musicVolume = PlayerPrefs.GetFloat(MusicVolumeKey);
+            musicVolumeSlider.value = musicVolume; // Set the slider value to the loaded volume
         }
         if (PlayerPrefs.HasKey(SFXVolumeKey))
         {
             sfxVolume = PlayerPrefs.GetFloat(SFXVolumeKey);
+            sfxVolumeSlider.value = sfxVolume; // Set the slider value to the loaded volume
         }
 
         // Set initial volume levels
-        musicSource.volume = musicVolume;
-        sfxSource.volume = sfxVolume;
+        SetMusicVolume(musicVolume);
+        SetSFXVolume(sfxVolume);
+
+        // Set listeners for volume sliders
+        musicVolumeSlider.onValueChanged.AddListener(SetMusicVolume);
+        sfxVolumeSlider.onValueChanged.AddListener(SetSFXVolume);
 
         // Assuming the initial scene has been loaded
         Scene currentScene = SceneManager.GetActiveScene();
@@ -66,17 +76,39 @@ public class AudioManager : MonoBehaviour
 
     private void UpdateBackgroundMusic(string sceneName)
     {
-        // Find the appropriate music clip for the scene
-        Sound s = Array.Find(musicSounds, x => x.name == sceneName + "_music");
-
-        if (s == null)
+        // Check if the scene being loaded is the specific scene where you want to change the music
+        if (sceneName == "Main")
         {
-            Debug.Log("Music not found for scene: " + sceneName);
+            // Find the appropriate music clip for the "main" scene
+            Sound s = Array.Find(musicSounds, x => x.name == sceneName + "_music");
+
+            if (s == null)
+            {
+                Debug.Log("Music not found for scene: " + sceneName);
+            }
+            else
+            {
+                // Play the music for the "main" scene
+                musicSource.clip = s.clip;
+                musicSource.Play();
+            }
         }
         else
         {
-            musicSource.clip = s.clip;
-            musicSource.Play();
+            // For all other scenes, play a specific background music
+            // You can adjust the music clip name or logic based on your specific requirements
+            Sound specificMusic = Array.Find(musicSounds, x => x.name == "BGmusic");
+
+            if (specificMusic == null)
+            {
+                Debug.Log("Specific music not found for scene: " + sceneName);
+            }
+            else
+            {
+                // Play the specific background music for all other scenes
+                musicSource.clip = specificMusic.clip;
+                musicSource.Play();
+            }
         }
     }
 
