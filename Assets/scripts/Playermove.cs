@@ -6,9 +6,14 @@ public class MovePlayer : MonoBehaviour
 {
     public MovementJoystick movementJoystick;
     public float playerSpeed;
+    public float dashSpeed=10f;
     private Rigidbody2D rb;
     private Animator anim;
     private SpriteRenderer sprite;
+    private bool isDashing=false;
+    public float dashTimer=0.125f;
+    private float dashStartTime=0f;
+    public TrailRenderer trailRenderer;
 
     // Start is called before the first frame update
     void Start()
@@ -16,14 +21,28 @@ public class MovePlayer : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>(); // Move Animator initialization here
         sprite = GetComponent<SpriteRenderer>(); // Move SpriteRenderer initialization here
+        trailRenderer.enabled = false;
     }
 
     // Update is called once per frame
-    void FixedUpdate()
+    void Update()
     {
         Vector2 direction = movementJoystick.joystickVec;
         MoveCharacter(direction); // Call MoveCharacter() with joystick direction
-        rb.velocity = direction * playerSpeed;
+        if(Input.GetKeyDown(KeyCode.Q)){
+            isDashing=true;
+        }
+        if(isDashing && dashStartTime<=dashTimer){
+            rb.velocity = direction * dashSpeed;
+            dashStartTime+=Time.deltaTime;
+            trailRenderer.enabled = true;
+        }
+        else{
+            dashStartTime=0f;
+            isDashing=false;
+            rb.velocity = direction * playerSpeed;
+            trailRenderer.enabled = false;
+        }
     }
 
     public void MoveCharacter(Vector2 direction)
@@ -32,7 +51,12 @@ public class MovePlayer : MonoBehaviour
         if (direction.x != 0)
         {
             anim.SetBool("Running", true);
-            sprite.flipX = direction.x < 0;
+            Vector3 newScale = this.transform.localScale;
+            if(direction.x>0)
+                newScale.x = 0.8f;
+            else
+                newScale.x = -0.8f;
+            this.transform.localScale = newScale;
         }
         else if (direction.y != 0)
         {
